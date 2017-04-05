@@ -26,6 +26,7 @@ public class Move {
 		// will have length 2 if using 2D (first item contains row position and second item contains column position)
 		// will have length 1 otherwise (array item will contain a number, either 1-32 or 1-35)
 		removedChips = removed;
+		if (removed == null) removedChips = new ArrayList<Integer[]>();
 		movedChipBecomesKing = kinged;
 	}
 	
