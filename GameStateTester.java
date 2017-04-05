@@ -7,14 +7,23 @@ public class GameStateTester {
 		System.out.println("TESTING 8x8 Array Representation:");
 		// tests
 		System.out.println("\nTESTING 32-Element Array Representation:");
-		CheckersGameState initialState = ThirtyTwoElementArray.initialState();
-		initialState.printState();
+		CheckersGameState testState32 = ThirtyTwoElementArray.initialState(); // starting config of checkers game
+		testState32.printState();
+		int numSampleMoves = 6;
+		for (int i = 0; i < numSampleMoves; i++) {
+			List<Move> moves32 = testState32.actions();
+			if (moves32.size() == 0) break;
+			int randomNum32 = ThreadLocalRandom.current().nextInt(0, moves32.size()); // random integer
+			Move move = moves32.get(randomNum32);
+			System.out.println("Random move chosen: " + move + "\nBoard state after move:");
+			testState32 = testState32.result(move);
+			testState32.printState();
+		}
 		
 		
 		System.out.println("\nTESTING 35-Element Representation:");
 		CheckersGameState testState = ThirtyFiveElementArray.initialState(); // starting config of checkers game
 		testState.printState();
-		int numSampleMoves = 6;
 		for (int i = 0; i < numSampleMoves; i++) {
 			List<Move> moves = testState.actions();
 			if (moves.size() == 0) break;
@@ -30,10 +39,10 @@ public class GameStateTester {
 		for (int i = 0; i < numSampleMoves; i++) {
 			List<Move> mvs = ts.actions();
 			if (mvs.size() == 0) break;
-			int randomNum = ThreadLocalRandom.current().nextInt(0, moves.size()); // random integer
+			int randomNum = ThreadLocalRandom.current().nextInt(0, mvs.size()); // random integer
 			Move mv = mvs.get(randomNum);
-			System.out.println("Random move chosen: " + move + "\nBoard state after move:");
-			ts = ts.result(move);
+			System.out.println("Random move chosen: " + mv + "\nBoard state after move:");
+			ts = ts.result(mv);
 			ts.printState();
 		}
 	}

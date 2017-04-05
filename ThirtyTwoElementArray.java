@@ -8,34 +8,36 @@ public class ThirtyTwoElementArray implements CheckersGameState {
 
 	private String _player;
 	private String[] _board;
-	private String[] locations;
+	private char[] locations;
 
 	public void setBoard(String[] _board) {
 		this._board = _board;
 	}
-
+	
 	public ThirtyTwoElementArray() {
-		this._board = new String[33];
-		this._player = PLAYER1;
+		// given size 36 so we can refer to indices as they are shown in diagrams (rather than starting at 0)
+		locations = new char[33];
+		_player = "???";
 	}
 
-	public ThirtyTwoElementArray(String player, String[] board) {
-		this._player = player;
-		this._board = board;
-	}
-
-	// The initial constructor
+	// returns the starting configuration of any checkers game
 	public static CheckersGameState initialState() {
 		ThirtyTwoElementArray initial = new ThirtyTwoElementArray();
-		// Sets the initial board
-		for(int i=1; i<=32; i++)
-		{
-			if(i < 13)
-				initial._board[i] = "b";
-			if(i >= 13 && i < 21)
-				initial._board[i] = null;
-			if(i >= 21)
-				initial._board[i] = "w";
+		initial._player = new String(PLAYER1);
+		for (int i = 1; i <= 12; i++) {
+			if (validLocation(i)) {
+				initial.locations[i] = 'b'; // set initial locations of black chips
+			}
+		}
+		for (int i = 13; i <= 20; i++) {
+			if (validLocation(i)) {
+				initial.locations[i] = ' '; // set empty locations
+			}
+		}
+		for (int i = 21; i <= 32; i++) {
+			if (validLocation(i)) {
+				initial.locations[i] = 'w'; // set initial locations of red chips
+			}
 		}
 		return initial;
 	}
@@ -53,7 +55,7 @@ public class ThirtyTwoElementArray implements CheckersGameState {
 
 		for (int i = 1; i <= 32; i++) {
 			if (validLocation(i)) {
-				String chip = locations[i];
+				char chip = locations[i];
 				if (!isCurrentPlayersChip(chip)) continue;
 				boolean canMoveForward = player().equals(PLAYER1) || isKing(chip); // forward = down the board
 				boolean canMoveBackward = player().equals(PLAYER2) || isKing(chip); // backward = up the board
@@ -175,34 +177,48 @@ public class ThirtyTwoElementArray implements CheckersGameState {
 		int toLocationIndex = x.toLocation[0];
 		if (player().equals(PLAYER1)) {
 			// Black's move, so chip at 'fromLocationIndex' must be either 'b' or 'B'
-			if (!(locations[fromLocationIndex] == "b" || locations[fromLocationIndex] == "B")) return null;
+			if (!(locations[fromLocationIndex] == 'b' || locations[fromLocationIndex] == 'B')) return null;
 		} 
 		else {
 			// Red's move, so chip at 'fromLocationIndex' must be either 'w' or 'W'
-			if (!(locations[fromLocationIndex] == "w" || locations[fromLocationIndex] == "W")) return null;
+			if (!(locations[fromLocationIndex] == 'w' || locations[fromLocationIndex] == 'W')) return null;
 		}
 
 		// validated move, so update the newState to reflect changes
-		String chipBeingMoved = newState.locations[fromLocationIndex];
-		newState.locations[fromLocationIndex] = null; // old location is now empty
+		char chipBeingMoved = newState.locations[fromLocationIndex];
+		newState.locations[fromLocationIndex] = ' '; // old location is now empty
 		newState.locations[toLocationIndex] = chipBeingMoved; // new location gets the chip
 		// chars are ASCII-based, so subtracting 32 effectively capitalizes 'b' or 'w' if the chip is getting kinged
-		if (x.movedChipBecomesKing)
-			{
-				char c = newState.locations[toLocationIndex].charAt(0);
-				c -= 32;
-				newState.locations[toLocationIndex] = String.valueOf(c);
-			}
+		if (x.movedChipBecomesKing) newState.locations[toLocationIndex] -= 32;
 		// turn locations where chips were removed into blank locations
 		for (Integer[] removedLocation : x.removedChips) {
-			newState.locations[removedLocation[0]] = null;
+			newState.locations[removedLocation[0]] = ' ';
 		}
 		// reverse who's move it is
 		newState._player = newState._player.equals(PLAYER1) ? new String(PLAYER2) : new String(PLAYER1);
 		return newState;
 	}
 
-	// Way more complicated than it probably needs to be
+	public void printState() {
+		String boardRepresentation = "********************\n";
+		int count = 0;
+		boolean leadingBlank = true;
+		for (int i = 1; i <= 32; i++) {
+			//if (invalidLocations.contains(i)) continue;
+			if (count == 4) {
+				boardRepresentation += "\n";
+				leadingBlank = !leadingBlank;
+				count = 0;
+			}
+			if (leadingBlank) boardRepresentation += "- " + locations[i] + " ";
+			else boardRepresentation += locations[i] + " - ";
+			count++;
+		}
+		boardRepresentation += "\n";
+		System.out.println(boardRepresentation + player() + "'s move\n********************");
+	}
+	
+	/*  OLD PRINT FUNCTION - Way more complicated than it needs to be
 	public void printState() {
 		System.out.println();
 
@@ -245,7 +261,8 @@ public class ThirtyTwoElementArray implements CheckersGameState {
 		System.out.println();
 		System.out.println(player() + "'s move");
 	}
-
+	*/
+	
 	// checks that the location is within bounds
 	private static boolean validLocation(int loc) {
 		if (loc < 1 || loc > 32) return false;
@@ -253,26 +270,26 @@ public class ThirtyTwoElementArray implements CheckersGameState {
 	}
 
 	// true if the chip character passed in belongs to the player who's move it is
-	private boolean isCurrentPlayersChip(String chip) {
+	private boolean isCurrentPlayersChip(char chip) {
 		// player 1's turn (black) and chip is black
-		if (player().equals(PLAYER1) && (chip == "b" || chip == "B")) return true;
+		if (player().equals(PLAYER1) && (chip == 'b' || chip == 'B')) return true;
 		// player 2's turn (red) and chip is white
-		if (player().equals(PLAYER2) && (chip == "w" || chip == "W")) return true;
+		if (player().equals(PLAYER2) && (chip == 'w' || chip == 'W')) return true;
 		return false;
 	}
 
 	// true if the chip character passed in belongs to the player who's move it ISN'T
-	private boolean isOpponentPlayersChip(String chip) {
+	private boolean isOpponentPlayersChip(char chip) {
 		// player 1's turn (black) and chip is red
-		if (player().equals(PLAYER1) && (chip == "w" || chip == "W")) return true;
+		if (player().equals(PLAYER1) && (chip == 'w' || chip == 'W')) return true;
 		// player 2's turn (red) and chip is black
-		if (player().equals(PLAYER2) && (chip == "b" || chip == "B")) return true;
+		if (player().equals(PLAYER2) && (chip == 'b' || chip == 'B')) return true;
 		return false;
 	}
 
 	// true if the chip character is a king
-	private boolean isKing(String chip) {
-		return chip == "B" || chip == "W";
+	private boolean isKing(char chip) {
+		return chip == 'B' || chip == 'W';
 	}
 
 	private static boolean shouldKing(String player, int location) {
@@ -285,7 +302,7 @@ public class ThirtyTwoElementArray implements CheckersGameState {
 
 	// standard move involving no jumps (can be 1 step in any of the 4 diagonals)
 	private Move standardMove(int start, int finish) {
-		if (validLocation(finish) && locations[finish] == null) 
+		if (validLocation(finish) && locations[finish] == ' ') 
 		{
 			Move move = new Move(player(), false, new int[] { start }, new int[] { finish }, null, shouldKing(player(), finish));
 			return move;
@@ -296,7 +313,7 @@ public class ThirtyTwoElementArray implements CheckersGameState {
 	// move involving a jump over 1 of the opponent's pieces (in any of the 4 diagonals)
 	private Move jumpMove(int start, int jumped, int finish) {
 		if (validLocation(jumped) && validLocation(finish)) {
-			if (isOpponentPlayersChip(locations[jumped]) && locations[finish] == null) {
+			if (isOpponentPlayersChip(locations[jumped]) && locations[finish] == ' ') {
 				ArrayList<Integer[]> taken = new ArrayList<Integer[]>();
 				taken.add(new Integer[] { jumped });
 				Move move = new Move(player(), false, new int[] { start }, new int[] { finish }, taken, shouldKing(player(), finish));
