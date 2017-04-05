@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 
 public class Move {
 
@@ -5,8 +6,9 @@ public class Move {
 	boolean using2DArray; // true for '8 x 8 Array' and 'Sparse' representations
 	int[] fromLocation; // the current location of the piece being moved
 	int[] toLocation; // the location the piece being moved will end up after this move
+	ArrayList<Integer[]> removedChips; // ArrayList of locations containing chips that will be removed by this move
 	
-	public Move(String player, boolean twoD, int[] from, int[] to) {
+	public Move(String player, boolean twoD, int[] from, int[] to, ArrayList<Integer[]> removed) {
 		if (player.equals(CheckersGameState.PLAYER1) || player.equals(CheckersGameState.PLAYER2)){
 			playerMakingMove = player;
 		} else {
@@ -19,6 +21,10 @@ public class Move {
 		// either 1-32 or 1-35, depending on the game state representation
 		fromLocation = from;
 		toLocation = to;
+		// each item in the 'removedChips' ArrayList is an int[] array with length either 2 or 1
+		// will have length 2 if using 2D (first item contains row position and second item contains column position)
+		// will have length 1 otherwise (array item will contain a number, either 1-32 or 1-35)
+		removedChips = removed;
 	}
 	
 	public String toString() {
@@ -28,6 +34,13 @@ public class Move {
 		} else {
 			str += fromLocation[0] + " to location " + toLocation[0];
 		}
+		if (removedChips.size() == 0) return str;
+		str += "\nChips were removed from the following locations: ";
+		for (Integer[] location : removedChips) {
+			if (using2DArray) str += "(" + location[0] + "," + location[1] + "), ";
+			else str += location[0] + ", ";
+		}
+		str = str.substring(0, str.length() - 2); // remove extra comma and space characters
 		return str;
 	}
 	
