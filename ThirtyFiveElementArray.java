@@ -51,6 +51,7 @@ public class ThirtyFiveElementArray implements CheckersGameState {
 	
 	public List<Move> actions() {
 		List<Move> actions = new LinkedList<Move>();
+		List<Move> requiredMoves = new LinkedList<Move>();
 		for (int i = 1; i <= 35; i++) {
 			if (validLocation(i)) {
 				char chip = locations[i];
@@ -60,12 +61,42 @@ public class ThirtyFiveElementArray implements CheckersGameState {
 				if (canMoveForward) {
 					Move forwardLeft = standardMove(i, i + 4);
 					Move forwardRight = standardMove(i, i + 5);
+					Move jumpLeft = jumpMove(i, i + 4, i + 8);
+					Move jumpRight = jumpMove(i, i + 5, i + 10);
+					if (forwardLeft != null) actions.add(forwardLeft);
+					if (forwardRight != null) actions.add(forwardRight);
+					if (jumpLeft != null) {
+						actions.add(jumpLeft);
+						requiredMoves.add(jumpLeft);
+					}
+					if (jumpRight != null) {
+						actions.add(jumpRight);
+						requiredMoves.add(jumpRight);
+					}
 				}
 				if (canMoveBackward) {
 					Move backwardLeft = standardMove(i, i - 5);
 					Move backwardRight = standardMove(i, i - 4);
+					Move jumpLeft = jumpMove(i, i - 5, i - 10);
+					Move jumpRight = jumpMove(i, i - 4, i - 8);
+					if (backwardLeft != null) actions.add(backwardLeft);
+					if (backwardRight != null) actions.add(backwardRight);
+					if (jumpLeft != null) {
+						actions.add(jumpLeft);
+						requiredMoves.add(jumpLeft);
+					}
+					if (jumpRight != null) {
+						actions.add(jumpRight);
+						requiredMoves.add(jumpRight);
+					}
 				}
 			}
+		}
+		if (requiredMoves.size() > 0) {
+			actions.clear();
+			// if one or more jumps are possible, one of them must be made
+			// a standard non-jumping move cannot be made in this case
+			for (Move action : requiredMoves) actions.add(action);
 		}
 		return actions;
 	}
@@ -79,6 +110,19 @@ public class ThirtyFiveElementArray implements CheckersGameState {
 		return null;
 	}
 	
+	// move involving a jump over 1 of the opponent's pieces (in any of the 4 diagonals)
+	private Move jumpMove(int start, int jumped, int finish) {
+		if (validLocation(jumped) && validLocation(finish)) {
+			if (isOpponentPlayersChip(locations[jumped]) && locations[finish] == ' ') {
+				ArrayList<Integer[]> taken = new ArrayList<Integer[]>();
+				taken.add(new Integer[] { jumped });
+				Move move = new Move(player, false, new int[] { start }, new int[] { finish }, taken, shouldKing(player, finish));
+				return move;
+			}
+		}
+		return null;
+	}
+	
 	// checks that the location is within bounds
 	private static boolean validLocation(int loc) {
 		if (loc < 1 || loc > 35) return false;
@@ -87,11 +131,20 @@ public class ThirtyFiveElementArray implements CheckersGameState {
 	}
 	
 	// true if the chip character passed in belongs to the player who's move it is
-	private  boolean isCurrentPlayersChip(char chip) {
+	private boolean isCurrentPlayersChip(char chip) {
 		// player 1's turn (black) and chip is black
 		if (player.equals(PLAYER1) && (chip == 'b' || chip == 'B')) return true;
 		// player 2's turn (red) and chip is red
 		if (player.equals(PLAYER2) && (chip == 'w' || chip == 'W')) return true;
+		return false;
+	}
+	
+	// true if the chip character passed in belongs to the player who's move it ISN'T
+	private boolean isOpponentPlayersChip(char chip) {
+		// player 1's turn (black) and chip is red
+		if (player.equals(PLAYER1) && (chip == 'w' || chip == 'W')) return true;
+		// player 2's turn (red) and chip is black
+		if (player.equals(PLAYER2) && (chip == 'b' || chip == 'B')) return true;
 		return false;
 	}
 	

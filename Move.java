@@ -39,7 +39,7 @@ public class Move {
 		}
 		if (movedChipBecomesKing) str += " (chip became king)";
 		if (removedChips.size() == 0) return str;
-		str += "\nChips were removed from the following locations: ";
+		str += "\nChips were removed from the following location(s): ";
 		for (Integer[] location : removedChips) {
 			if (using2DArray) str += "(" + location[0] + "," + location[1] + "), ";
 			else str += location[0] + ", ";
