@@ -2,13 +2,14 @@ import java.util.ArrayList;
 
 public class Move {
 
-	String playerMakingMove; // either 'black' or 'white'
+	String playerMakingMove; // either 'Black' or 'White'
 	boolean using2DArray; // true for '8 x 8 Array' and 'Sparse' representations
 	int[] fromLocation; // the current location of the piece being moved
 	int[] toLocation; // the location the piece being moved will end up after this move
 	ArrayList<Integer[]> removedChips; // ArrayList of locations containing chips that will be removed by this move
+	boolean movedChipBecomesKing; // true if, after this move, the chip being moved should be kinged
 	
-	public Move(String player, boolean twoD, int[] from, int[] to, ArrayList<Integer[]> removed) {
+	public Move(String player, boolean twoD, int[] from, int[] to, ArrayList<Integer[]> removed, boolean kinged) {
 		if (player.equals(CheckersGameState.PLAYER1) || player.equals(CheckersGameState.PLAYER2)){
 			playerMakingMove = player;
 		} else {
@@ -25,6 +26,7 @@ public class Move {
 		// will have length 2 if using 2D (first item contains row position and second item contains column position)
 		// will have length 1 otherwise (array item will contain a number, either 1-32 or 1-35)
 		removedChips = removed;
+		movedChipBecomesKing = kinged;
 	}
 	
 	public String toString() {
@@ -34,6 +36,7 @@ public class Move {
 		} else {
 			str += fromLocation[0] + " to location " + toLocation[0];
 		}
+		if (movedChipBecomesKing) str += " (chip became king)";
 		if (removedChips.size() == 0) return str;
 		str += "\nChips were removed from the following locations: ";
 		for (Integer[] location : removedChips) {
