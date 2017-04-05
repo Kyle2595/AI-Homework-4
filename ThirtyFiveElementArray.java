@@ -7,16 +7,18 @@ import java.util.Arrays;
 public class ThirtyFiveElementArray implements CheckersGameState {
 
 	// 35-element array
-	// a 0 at index i indicates an empty position
-	// a 1 at index i indicates a black piece
-	// a 2 at index i indicates a red piece
-	private int[] locations;
+	// a space (' ') at index i indicates a blank location
+	// a b at index i indicates a black chip
+	// a B at index i indicates a black king
+	// a w at index i indicates a red chip
+	// a W at index i indicates a red king
+	private char[] locations;
 	private static List<Integer> invalidLocations = new LinkedList<Integer>(Arrays.asList(9, 18, 27));
 	private String player;
 	
 	public ThirtyFiveElementArray() {
 		// given size 36 so we can refer to indices as they are shown in diagrams (rather than starting at 0)
-		locations = new int[36];
+		locations = new char[36];
 		player = "???";
 	}
 	
@@ -26,11 +28,15 @@ public class ThirtyFiveElementArray implements CheckersGameState {
 		initial.player = new String(PLAYER1);
 		for (int i = 1; i <= 13; i++) {
 			if (invalidLocations.contains(i)) continue;
-			initial.locations[i] = 1; // set initial locations of black chips
+			initial.locations[i] = 'b'; // set initial locations of black chips
+		}
+		for (int i = 14; i <= 22; i++) {
+			if (invalidLocations.contains(i)) continue;
+			initial.locations[i] = ' '; // set empty locations
 		}
 		for (int i = 23; i <= 35; i++) {
 			if (invalidLocations.contains(i)) continue;
-			initial.locations[i] = 2; // set initial locations of red chips
+			initial.locations[i] = 'w'; // set initial locations of red chips
 		}
 		return initial;
 	}
@@ -49,6 +55,22 @@ public class ThirtyFiveElementArray implements CheckersGameState {
 	}
 	
 	public void printState() {
-		System.out.println("printState() in ThirtyFiveElementArray class still needs to be implemented");
+		String boardRepresentation = "********************\n";
+		int count = 0;
+		boolean leadingBlank = true;
+		for (int i = 1; i <= 35; i++) {
+			if (invalidLocations.contains(i)) continue;
+			if (count == 4) {
+				boardRepresentation += "\n";
+				leadingBlank = !leadingBlank;
+				count = 0;
+			}
+			if (leadingBlank) boardRepresentation += "- " + locations[i] + " ";
+			else boardRepresentation += locations[i] + " " + "- ";
+			count++;
+		}
+		boardRepresentation += "\n";
+		System.out.println(boardRepresentation + player + "'s move\n********************");
 	}
 }
+

@@ -6,10 +6,14 @@ public class GameStateTester {
 	public static void main(String[] args) {
 		System.out.println("TESTING 8x8 Array Representation:");
 		// tests
-		System.out.println("TESTING 32-Element Array Representation:");
-		// tests
-		System.out.println("TESTING 35-Element Representation:");
+		System.out.println("\nTESTING 32-Element Array Representation:");
+		CheckersGameState initialState = ThirtyTwoElementArray.initialState();
+		initialState.printState();
+		
+		
+		System.out.println("\nTESTING 35-Element Representation:");
 		CheckersGameState testState = ThirtyFiveElementArray.initialState(); // starting config of checkers game
+		testState.printState();
 		int numSampleMoves = 5;
 		for (int i = 0; i < numSampleMoves; i++) {
 			List<Move> moves = testState.actions();
@@ -20,7 +24,7 @@ public class GameStateTester {
 			testState = testState.result(move);
 			testState.printState();
 		}
-		System.out.println("TESTING Sparse Representation:");
+		System.out.println("\nTESTING Sparse Representation:");
 		// tests
 	}
 

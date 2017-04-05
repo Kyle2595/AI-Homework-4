@@ -1,7 +1,7 @@
 
 public class Move {
 
-	String playerMakingMove; // either 'black' or 'red'
+	String playerMakingMove; // either 'black' or 'white'
 	boolean using2DArray; // true for '8 x 8 Array' and 'Sparse' representations
 	int[] fromLocation; // the current location of the piece being moved
 	int[] toLocation; // the location the piece being moved will end up after this move
@@ -14,7 +14,7 @@ public class Move {
 		}
 		using2DArray = twoD;
 		// if using 2D, 'fromLocation' and 'toLocation' have length 2 where the first number
-		// is the row position and the second number is the column location
+		// is the row location and the second number is the column location
 		// otherwise, 'fromLocation' and 'toLocation' have length 1 and have values of
 		// either 1-32 or 1-35, depending on the game state representation
 		fromLocation = from;
