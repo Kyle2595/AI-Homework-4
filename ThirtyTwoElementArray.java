@@ -45,10 +45,6 @@ public class ThirtyTwoElementArray implements CheckersGameState {
 		return _player.equals(PLAYER1) ? PLAYER1 : PLAYER2;
 	}
 
-
-
-
-
 	public List<Move> actions() {
 
 		// Returns the set of legal moves in a state
@@ -166,15 +162,44 @@ public class ThirtyTwoElementArray implements CheckersGameState {
 				}
 			}
 		}
-
-		if (!_player.equals(PLAYER1) && !_player.equals(PLAYER2)) return null;
-
 		return actionList;
 	}
 
 	public CheckersGameState result(Move x) {
-		// TODO Auto-generated method stub
-		return null;
+		ThirtyTwoElementArray newState = cloneMe();
+
+		// test for invalid moves...
+		if (x.using2DArray) return null; // this implementation uses a 1D array
+		if (!x.playerMakingMove.equals(player())) return null; // player cannot make a move if it's not his turn
+		int fromLocationIndex = x.fromLocation[0];
+		int toLocationIndex = x.toLocation[0];
+		if (player().equals(PLAYER1)) {
+			// Black's move, so chip at 'fromLocationIndex' must be either 'b' or 'B'
+			if (!(locations[fromLocationIndex] == "b" || locations[fromLocationIndex] == "B")) return null;
+		} 
+		else {
+			// Red's move, so chip at 'fromLocationIndex' must be either 'w' or 'W'
+			if (!(locations[fromLocationIndex] == "w" || locations[fromLocationIndex] == "W")) return null;
+		}
+
+		// validated move, so update the newState to reflect changes
+		String chipBeingMoved = newState.locations[fromLocationIndex];
+		newState.locations[fromLocationIndex] = null; // old location is now empty
+		newState.locations[toLocationIndex] = chipBeingMoved; // new location gets the chip
+		// chars are ASCII-based, so subtracting 32 effectively capitalizes 'b' or 'w' if the chip is getting kinged
+		if (x.movedChipBecomesKing)
+			{
+				char c = newState.locations[toLocationIndex].charAt(0);
+				c -= 32;
+				newState.locations[toLocationIndex] = String.valueOf(c);
+			}
+		// turn locations where chips were removed into blank locations
+		for (Integer[] removedLocation : x.removedChips) {
+			newState.locations[removedLocation[0]] = null;
+		}
+		// reverse who's move it is
+		newState._player = newState._player.equals(PLAYER1) ? new String(PLAYER2) : new String(PLAYER1);
+		return newState;
 	}
 
 	// Way more complicated than it probably needs to be
@@ -279,5 +304,16 @@ public class ThirtyTwoElementArray implements CheckersGameState {
 			}
 		}
 		return null;
+	}
+
+	private ThirtyTwoElementArray cloneMe() {
+		// returns a game state configured exactly like the current one, but a different object
+		// that way the clone can be modified without modifying the original state (used in result() method)
+		ThirtyTwoElementArray duplicate = new ThirtyTwoElementArray();
+		for (int i = 0; i < locations.length; i++) {
+			duplicate.locations[i] = locations[i];
+		}
+		duplicate._player = new String(player());
+		return duplicate;
 	}
 }
