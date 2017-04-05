@@ -28,10 +28,10 @@ public class GameStateTester {
 		CheckersGameState ts = SparseRepresentation.initialState();
 		ts.printState();
 		for (int i = 0; i < numSampleMoves; i++) {
-			List<Move> moves = ts.actions();
-			if (moves.size() == 0) break;
+			List<Move> mvs = ts.actions();
+			if (mvs.size() == 0) break;
 			int randomNum = ThreadLocalRandom.current().nextInt(0, moves.size()); // random integer
-			Move move = moves.get(randomNum);
+			Move mv = mvs.get(randomNum);
 			System.out.println("Random move chosen: " + move + "\nBoard state after move:");
 			ts = ts.result(move);
 			ts.printState();
