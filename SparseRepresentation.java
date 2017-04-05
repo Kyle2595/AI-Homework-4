@@ -6,7 +6,7 @@ import java.util.List;
 
 //Rahul Jevisetty
 //Added onto code by Trevor Phillips
-//Sparse Representation using 35 element array
+//Sparse Representation using arrayList and 35 element array
 
 public class SparseRepresentation implements CheckersGameState{
 
