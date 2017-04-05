@@ -30,6 +30,22 @@ public class Move {
 		movedChipBecomesKing = kinged;
 	}
 	
+	public boolean chipRemovedAtLocation(int loc) {
+		if (using2DArray) return false;
+		for (Integer[] removedLocation : removedChips) {
+			if (removedLocation[0] == loc) return true;
+		}
+		return false;
+	}
+	
+	public boolean chipRemovedAtLocation(int row, int col) {
+		if (!using2DArray) return false;
+		for (Integer[] removedLocation : removedChips) {
+			if (removedLocation[0] == row && removedLocation[1] == col) return true;
+		}
+		return false;
+	}
+	
 	public String toString() {
 		String str = "'" + playerMakingMove + "' is moving a piece from location ";
 		if (using2DArray) {

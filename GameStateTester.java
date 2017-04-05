@@ -14,7 +14,7 @@ public class GameStateTester {
 		System.out.println("\nTESTING 35-Element Representation:");
 		CheckersGameState testState = ThirtyFiveElementArray.initialState(); // starting config of checkers game
 		testState.printState();
-		int numSampleMoves = 5;
+		int numSampleMoves = 6;
 		for (int i = 0; i < numSampleMoves; i++) {
 			List<Move> moves = testState.actions();
 			if (moves.size() == 0) break;
