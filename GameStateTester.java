@@ -48,5 +48,6 @@ public class GameStateTester {
 			ts = ts.result(mv);
 			ts.printState();
 		}
+		
 	}
 }

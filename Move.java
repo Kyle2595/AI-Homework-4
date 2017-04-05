@@ -30,20 +30,42 @@ public class Move {
 		movedChipBecomesKing = kinged;
 	}
 	
-	public boolean chipRemovedAtLocation(int loc) {
-		if (using2DArray) return false;
-		for (Integer[] removedLocation : removedChips) {
-			if (removedLocation[0] == loc) return true;
+	// constructor used for 1D implementations
+	public Move(String player, int from, int to, ArrayList<Integer> removed, boolean kinged) {
+		playerMakingMove = player;
+		using2DArray = false;
+		fromLocation = new int[] { from };
+		toLocation = new int[] { to };
+		removedChips = new ArrayList<Integer[]>();
+		if (removed != null) {
+			for (int i : removed) removedChips.add(new Integer[] { i });
 		}
-		return false;
+		movedChipBecomesKing = kinged;
 	}
 	
-	public boolean chipRemovedAtLocation(int row, int col) {
-		if (!using2DArray) return false;
-		for (Integer[] removedLocation : removedChips) {
-			if (removedLocation[0] == row && removedLocation[1] == col) return true;
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof Move)) return false;
+		Move other = (Move)o;
+		
+		if (!playerMakingMove.equals(other.playerMakingMove) || using2DArray != other.using2DArray) return false;
+		if (movedChipBecomesKing != other.movedChipBecomesKing || removedChips.size() != other.removedChips.size()) return false;
+		for (int i = 0; i < fromLocation.length; i++) {
+			if (fromLocation[i] != other.fromLocation[i]) return false;
 		}
-		return false;
+		for (int i = 0; i < toLocation.length; i++) {
+			if (toLocation[i] != other.toLocation[i]) return false;
+		}
+		for (int i = 0; i < removedChips.size(); i++) {
+			Integer[] a1 = removedChips.get(i);
+			Integer[] a2 = other.removedChips.get(i);
+			if (a1.length != a2.length) return false;
+			for (int j = 0; j < a1.length; j++) {
+				if (a1[j] != a2[j]) return false;
+			}
+		}
+
+		return true;
 	}
 	
 	public String toString() {

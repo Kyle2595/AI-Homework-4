@@ -1,7 +1,4 @@
-import java.util.ArrayList;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.Arrays;
+import java.util.*;
 
 // Trevor Phillips
 
@@ -21,6 +18,17 @@ public class ThirtyFiveElementArray implements CheckersGameState {
 		// given size 36 so we can refer to indices as they are shown in diagrams (rather than starting at 0)
 		locations = new char[36];
 		player = "???";
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof ThirtyFiveElementArray)) return false;
+		ThirtyFiveElementArray other = (ThirtyFiveElementArray)o;
+		if (!player.equals(other.player)) return false;
+		for (int i = 0; i < locations.length; i++) {
+			if (!(locations[i] == other.locations[i])) return false;
+		}
+		return true;
 	}
 	
 	// returns the starting configuration of any checkers game
@@ -45,164 +53,22 @@ public class ThirtyFiveElementArray implements CheckersGameState {
 		return initial;
 	}
 	
-	public String player() {
-		return player;
-	}
+	/* ********** HELPER METHODS ********** */
 	
-	public List<Move> actions() {
-		List<Move> actions = new LinkedList<Move>();
-		List<Move> requiredMoves = new LinkedList<Move>();
-		for (int i = 1; i <= 35; i++) {
-			if (validLocation(i)) {
-				char chip = locations[i];
-				if (!isCurrentPlayersChip(chip)) continue;
-				boolean canMoveForward = player.equals(PLAYER1) || isKing(chip); // forward = down the board
-				boolean canMoveBackward = player.equals(PLAYER2) || isKing(chip); // backward = up the board
-				if (canMoveForward) {
-					Move forwardLeft = standardMove(i, i + 4);
-					Move forwardRight = standardMove(i, i + 5);
-					if (forwardLeft != null) actions.add(forwardLeft);
-					if (forwardRight != null) actions.add(forwardRight);
-				}
-				if (canMoveBackward) {
-					Move backwardLeft = standardMove(i, i - 5);
-					Move backwardRight = standardMove(i, i - 4);
-					if (backwardLeft != null) actions.add(backwardLeft);
-					if (backwardRight != null) actions.add(backwardRight);
-				}
-				LinkedList<Move> jumps = jumpMoves(i, canMoveForward, canMoveBackward);
-				if (jumps.size() > 0) {
-					actions.addAll(jumps);
-					requiredMoves.addAll(jumps);
-				}
-			}
-		}
-		if (requiredMoves.size() > 0) {
-			actions.clear();
-			// if one or more jumps are possible, one of them must be made
-			// a standard non-jumping move cannot be made in this case
-			for (Move action : requiredMoves) actions.add(action);
-		}
-		return actions;
-	}
-	
-	// standard move involving no jumps (can be 1 step in any of the 4 diagonals)
-	private Move standardMove(int start, int finish) {
-		if (validLocation(finish) && locations[finish] == ' ') {
-			Move move = new Move(player, false, new int[] { start }, new int[] { finish }, null, shouldKing(player, finish));
-			return move;
-		}
-		return null;
-	}
-	
-	private int[][] getRelativeJumps(int location) {
-		int[][] relativeJumps = new int[][] {
-				// start,   removed chip, finish location
-				{ location, location + 4, location + 8 },
-				{ location, location + 5, location + 10 },
-				{ location, location - 4, location - 8 },
-				{ location, location - 5, location - 10 }
-		};
-		return relativeJumps;
-	}
-	
-	private LinkedList<Move> jumpMoves(int location, boolean canMoveForward, boolean canMoveBackward) {
-		// WARNING: Need to account for the situation where after a jump move, a chip is crowned and can now move backwards
-		int initialLoc = location;
-		LinkedList<Move> jumps = new LinkedList<Move>();
-		
-		// test jumping over 1 chip in the 4 diagonal directions
-		for (int[] jump : getRelativeJumps(location)) {
-			// test if this jump is actually possible
-			if (canJump(jump[0], jump[1], jump[2], canMoveForward, canMoveBackward)) {
-				// if yes, we remove the chip at location[1]
-				ArrayList<Integer[]> removed = new ArrayList<Integer[]>();
-				removed.add(new Integer[] { jump[1] });
-				// create the jump move
-				Move m = new Move(player, false, new int[] { jump[0] }, new int[] { jump[2] }, 
-						removed, shouldKing(player, jump[2]));
-				jumps.add(m);
-			}
-		}
-		if (jumps.size() == 0) return jumps; // no jumps possible
-		
-		boolean secondaryJumpsPossible = true;
-		while (secondaryJumpsPossible) {
-			boolean newJumpAdded = false;
-			for (int i = 0; i < jumps.size(); i++) {
-				Move m = jumps.get(i);
-				int chipLocationAfterLastJump = m.toLocation[0];
-				boolean secondaryJumpAdded = false;
-				for (int[] jump : getRelativeJumps(chipLocationAfterLastJump)) {
-					if (m.chipRemovedAtLocation(jump[1])) continue; // cannot jump over a chip that's already been removed
-					if (canJump(jump[0], jump[1], jump[2], canMoveForward, canMoveBackward)) {
-						// if yes, we create a new, updated move
-						ArrayList<Integer[]> removed = new ArrayList<Integer[]>();
-						for (Integer[] c : m.removedChips) removed.add(c);
-						removed.add(new Integer[] { jump[1] }); // remove the chip at location[1]
-						Move m2 = new Move(player, false, new int[] { initialLoc }, new int[] { jump[2] },
-								removed, shouldKing(player, jump[2]));
-						jumps.add(m2);
-						secondaryJumpAdded = true;
-						newJumpAdded = true;
-					}
-				}
-				if (secondaryJumpAdded) jumps.remove(i--);
-			}
-			if (!newJumpAdded) secondaryJumpsPossible = false;
-		}
-		
-		return jumps;
-	}
-	
-	/*
-	// move involving a jump over 1 of the opponent's pieces (in any of the 4 diagonals)
-	private Move jumpMove(int start, int jumped, int finish) {
-		if (validLocation(jumped) && validLocation(finish)) {
-			if (isOpponentPlayersChip(locations[jumped]) && locations[finish] == ' ') {
-				ArrayList<Integer[]> taken = new ArrayList<Integer[]>();
-				taken.add(new Integer[] { jumped });
-				Move move = new Move(player, false, new int[] { start }, new int[] { finish }, taken, shouldKing(player, finish));
-				return move;
-			}
-		}
-		return null;
-	}
-	*/
-	/*
-	private ArrayList<Move> testForChaining(ThirtyFiveElementArray initial, ArrayList<Move> combos, Move jump) {
-		ThirtyFiveElementArray temp = initial.cloneMe();
-		temp = (ThirtyFiveElementArray)temp.result(jump);
-		temp.player = new String(initial.player); // keep the same player; testing whether this player can jump again
-		
-		ArrayList<Move> moves = new ArrayList<Move>();
-		int i = jump.toLocation[0];
-		char chip = temp.locations[i];
-		boolean canMoveForward = temp.player.equals(PLAYER1) || isKing(chip); // forward = down the board
-		boolean canMoveBackward = temp.player.equals(PLAYER2) || isKing(chip); // backward = up the board
-		if (canMoveForward) {
-			Move jumpLeft = temp.jumpMove(i, i + 4, i + 8);
-			Move jumpRight = temp.jumpMove(i, i + 5, i + 10);
-			if (jumpLeft != null) moves.add(jumpLeft);
-			if (jumpRight != null) moves.add(jumpRight);
-		}
-		if (canMoveBackward) {
-			Move jumpLeft = temp.jumpMove(i, i - 5, i - 10);
-			Move jumpRight = temp.jumpMove(i, i - 4, i - 8);
-			if (jumpLeft != null) moves.add(jumpLeft);
-			if (jumpRight != null) moves.add(jumpRight);
-		}
-		if (moves.isEmpty()) combos.add(jump); // chaining is not possible
-		
-		return combos;
-	}
-	*/
 	// checks that the location is within bounds
 	private static boolean validLocation(int loc) {
 		if (loc < 1 || loc > 35) return false;
 		if (invalidLocations.contains(loc)) return false;
 		return true;
 	}
+	
+	// true if the chip character is a king
+	private boolean isKing(char chip) {
+		return chip == 'B' || chip == 'W';
+	}
+	
+	private boolean canMoveForward(char chip) { return player.equals(PLAYER1) || isKing(chip); }
+	private boolean canMoveBackward(char chip) { return player.equals(PLAYER2) || isKing(chip); }
 	
 	// true if the chip character passed in belongs to the player who's move it is
 	private boolean isCurrentPlayersChip(char chip) {
@@ -222,11 +88,6 @@ public class ThirtyFiveElementArray implements CheckersGameState {
 		return false;
 	}
 	
-	// true if the chip character is a king
-	private boolean isKing(char chip) {
-		return chip == 'B' || chip == 'W';
-	}
-	
 	private static boolean shouldKing(String player, int location) {
 		// black player has reached the other end of the board and should be kinged
 		if (player.equals(PLAYER1) && location >= 32 && location <= 35) return true;
@@ -235,11 +96,157 @@ public class ThirtyFiveElementArray implements CheckersGameState {
 		return false;
 	}
 	
-	private boolean canJump(int start, int jumped, int finish, boolean canMoveForward, boolean canMoveBackward) {
-		if (!canMoveForward && (jumped > start || finish > start)) return false;
-		if (!canMoveBackward && (jumped < start || finish < start)) return false;
+	private boolean canJump(int start, int jumped, int finish) {
 		if (!validLocation(start) || !validLocation(jumped) || !validLocation(finish)) return false;
+		if (!canMoveForward(locations[start]) && (jumped > start || finish > start)) return false;
+		if (!canMoveBackward(locations[start]) && (jumped < start || finish < start)) return false;
 		return isCurrentPlayersChip(locations[start]) && isOpponentPlayersChip(locations[jumped]) && locations[finish] == ' ';
+	}
+	
+	// returns a game state configured exactly like the current one, but a different object
+	// that way the clone can be modified without modifying the original state (used in result() method)
+	private ThirtyFiveElementArray cloneMe() {
+		ThirtyFiveElementArray duplicate = new ThirtyFiveElementArray();
+		for (int i = 0; i < locations.length; i++) {
+			duplicate.locations[i] = locations[i];
+		}
+		duplicate.player = new String(player);
+		return duplicate;
+	}
+	
+	// standard move involving no jumps (can be 1 step in any of the 4 diagonals)
+	private Move standardMove(int start, int finish) {
+		if (validLocation(finish) && locations[finish] == ' ') {
+			return new Move(player, start, finish, null, shouldKing(player, finish));
+		}
+		return null;
+	}
+	
+	private LinkedList<Move> simpleJumps(int location) {
+		int[][] relativeJumps = new int[][] {
+				// start,   removed chip, finish location
+				{ location, location + 4, location + 8 },
+				{ location, location + 5, location + 10 },
+				{ location, location - 4, location - 8 },
+				{ location, location - 5, location - 10 }
+		};
+		
+		LinkedList<Move> jumps = new LinkedList<Move>();
+		// test jumping over 1 chip in the 4 diagonal directions
+		for (int[] jump : relativeJumps) {
+			// test if this jump is actually possible
+			if (canJump(jump[0], jump[1], jump[2])) {
+				// if yes, we remove the chip at location[1]
+				ArrayList<Integer> removed = new ArrayList<Integer>(Arrays.asList(jump[1]));
+				// create the jump move
+				Move m = new Move(player, jump[0], jump[2], removed, shouldKing(player, jump[2]));
+				jumps.add(m);
+			}
+		}
+		return jumps;
+	}
+	
+	private Move traceback(SearchNode node) {
+		// simple properties to determine about this sequence of jump moves
+		int endingLocation = node.fromParentToCurrent.toLocation[0];
+		String player = node.current.player();
+		ThirtyFiveElementArray endState = (ThirtyFiveElementArray)node.current;
+		char chipAtEndState = endState.locations[node.fromParentToCurrent.toLocation[0]];
+		boolean kinged = chipAtEndState == 'B' || chipAtEndState == 'W';
+		// trace back to find the original chip location and all removed chips
+		int startingLocation = node.fromParentToCurrent.fromLocation[0];
+		ArrayList<Integer> removed = new ArrayList<Integer>();
+		for (Integer[] removedLoc : node.fromParentToCurrent.removedChips) {
+			removed.add(removedLoc[0]);
+		}
+		SearchNode temp = node.parent;
+		while (temp != null && temp.fromParentToCurrent != null) {
+			startingLocation = temp.fromParentToCurrent.fromLocation[0];
+			for (Integer[] removedLoc : temp.fromParentToCurrent.removedChips) {
+				removed.add(removedLoc[0]);
+			}
+			temp = temp.parent;
+		}
+		return new Move(player, startingLocation, endingLocation, removed, kinged);
+	}
+	
+	private LinkedList<Move> jumpMoves(int location) {
+		// DFS to determine all possible sequences of jump moves from a chip's given location
+		LinkedList<Move> jumps = new LinkedList<Move>();
+		
+		SearchNode root = new SearchNode(null, this, null, true);
+		ArrayList<SearchNode> stack = new ArrayList<SearchNode>();
+		LinkedList<Move> initialJumps = simpleJumps(location);
+		for (Move jump : initialJumps) {
+			ThirtyFiveElementArray result = (ThirtyFiveElementArray)this.result(jump);
+			result.player = new String(player); // do not reverse the player in this special case
+			SearchNode node = new SearchNode(root, result, jump, false);
+			stack.add(node);
+		}
+		while (!stack.isEmpty()) {
+			SearchNode v = stack.remove(0);
+			if (!v.visited) {
+				v.visited = true;
+				ThirtyFiveElementArray currentState = (ThirtyFiveElementArray)v.current;
+				int newLocationOfJumpingChip = v.fromParentToCurrent.toLocation[0];
+				LinkedList<Move> adjacencies = currentState.simpleJumps(newLocationOfJumpingChip);
+				if (adjacencies.size() == 0) {
+					// the last jump resulted in a terminal state allowing no more jumps
+					jumps.add(traceback(v));
+				} else {
+					// add nodes for the DFS
+					for (Move jump : adjacencies) {
+						ThirtyFiveElementArray result = (ThirtyFiveElementArray)currentState.result(jump);
+						result.player = new String(currentState.player); // do not reverse the player
+						SearchNode node = new SearchNode(v, result, jump, false);
+						stack.add(0, node);
+					}
+				}
+			}
+		}
+		
+		return jumps;
+	}
+		
+	/* ********** CheckersGameState IMPLEMENTATION METHODS ********** */
+	
+	public String player() {
+		return player;
+	}
+	
+	public List<Move> actions() {
+		List<Move> actions = new LinkedList<Move>();
+		List<Move> requiredMoves = new LinkedList<Move>();
+		for (int i = 1; i <= 35; i++) {
+			if (validLocation(i)) {
+				char chip = locations[i];
+				if (!isCurrentPlayersChip(chip)) continue;
+				if (canMoveForward(chip)) {
+					Move forwardLeft = standardMove(i, i + 4);
+					Move forwardRight = standardMove(i, i + 5);
+					if (forwardLeft != null) actions.add(forwardLeft);
+					if (forwardRight != null) actions.add(forwardRight);
+				}
+				if (canMoveBackward(chip)) {
+					Move backwardLeft = standardMove(i, i - 5);
+					Move backwardRight = standardMove(i, i - 4);
+					if (backwardLeft != null) actions.add(backwardLeft);
+					if (backwardRight != null) actions.add(backwardRight);
+				}
+				LinkedList<Move> jumps = jumpMoves(i);
+				if (jumps.size() > 0) {
+					actions.addAll(jumps);
+					requiredMoves.addAll(jumps);
+				}
+			}
+		}
+		if (requiredMoves.size() > 0) {
+			actions.clear();
+			// if one or more jumps are possible, one of them must be made
+			// a standard non-jumping move cannot be made in this case
+			for (Move action : requiredMoves) actions.add(action);
+		}
+		return actions;
 	}
 	
 	public CheckersGameState result(Move x) {
@@ -271,17 +278,6 @@ public class ThirtyFiveElementArray implements CheckersGameState {
 		// reverse who's move it is
 		newState.player = newState.player.equals(PLAYER1) ? new String(PLAYER2) : new String(PLAYER1);
 		return newState;
-	}
-	
-	private ThirtyFiveElementArray cloneMe() {
-		// returns a game state configured exactly like the current one, but a different object
-		// that way the clone can be modified without modifying the original state (used in result() method)
-		ThirtyFiveElementArray duplicate = new ThirtyFiveElementArray();
-		for (int i = 0; i < locations.length; i++) {
-			duplicate.locations[i] = locations[i];
-		}
-		duplicate.player = new String(player);
-		return duplicate;
 	}
 	
 	public void printState() {
