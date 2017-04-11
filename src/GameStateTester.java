@@ -5,7 +5,7 @@ public class GameStateTester {
 
 	public static void main(String[] args) {
 		
-		int numSampleMoves = 6; // Number of moves to make for each test
+		int numSampleMoves = 100; // Number of moves to make for each test
 		
 		System.out.println("TESTING 8x8 Array Representation:");
 		// tests
@@ -35,7 +35,7 @@ public class GameStateTester {
 			testState = testState.result(move);
 			testState.printState();
 		}
-		
+		/*
 		System.out.println("\nTESTING Sparse Representation:");
 		CheckersGameState ts = SparseRepresentation.initialState();
 		ts.printState();
@@ -48,6 +48,6 @@ public class GameStateTester {
 			ts = ts.result(mv);
 			ts.printState();
 		}
-		
+		*/
 	}
 }

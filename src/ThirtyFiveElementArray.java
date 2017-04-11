@@ -4,6 +4,20 @@ import java.util.*;
 
 public class ThirtyFiveElementArray implements CheckersGameState {
 
+	/*
+	
+-   -   -   -   
+  - W -   -   - 
+- b - w -   - b 
+  -   -   -   - 
+- w - w -   -   
+  -   -   - w - 
+-   -   -   -   
+  -   -   - w - 
+White's move
+	 
+	 */
+	
 	// 35-element array
 	// a space (' ') at index i indicates a blank location
 	// a b at index i indicates a black chip
@@ -88,7 +102,9 @@ public class ThirtyFiveElementArray implements CheckersGameState {
 		return false;
 	}
 	
-	private static boolean shouldKing(String player, int location) {
+	private boolean shouldKing(String player, char chip, int location) {
+		// do not king if it is already a king
+		if (!validLocation(location) || isKing(chip)) return false;
 		// black player has reached the other end of the board and should be kinged
 		if (player.equals(PLAYER1) && location >= 32 && location <= 35) return true;
 		// red player has reached the other end of the board and should be kinged
@@ -114,10 +130,16 @@ public class ThirtyFiveElementArray implements CheckersGameState {
 		return duplicate;
 	}
 	
+	private void makeKing(int location) {
+		if (!validLocation(location)) return;
+		if (locations[location] == 'b') locations[location] = 'B';
+		else if (locations[location] == 'w') locations[location] = 'W';
+	}
+	
 	// standard move involving no jumps (can be 1 step in any of the 4 diagonals)
 	private Move standardMove(int start, int finish) {
 		if (validLocation(finish) && locations[finish] == ' ') {
-			return new Move(player, start, finish, null, shouldKing(player, finish));
+			return new Move(player, start, finish, null, shouldKing(player, locations[start], finish));
 		}
 		return null;
 	}
@@ -139,7 +161,7 @@ public class ThirtyFiveElementArray implements CheckersGameState {
 				// if yes, we remove the chip at location[1]
 				ArrayList<Integer> removed = new ArrayList<Integer>(Arrays.asList(jump[1]));
 				// create the jump move
-				Move m = new Move(player, jump[0], jump[2], removed, shouldKing(player, jump[2]));
+				Move m = new Move(player, jump[0], jump[2], removed, shouldKing(player, locations[jump[0]], jump[2]));
 				jumps.add(m);
 			}
 		}
@@ -150,11 +172,9 @@ public class ThirtyFiveElementArray implements CheckersGameState {
 		// simple properties to determine about this sequence of jump moves
 		int endingLocation = node.fromParentToCurrent.toLocation[0];
 		String player = node.current.player();
-		ThirtyFiveElementArray endState = (ThirtyFiveElementArray)node.current;
-		char chipAtEndState = endState.locations[node.fromParentToCurrent.toLocation[0]];
-		boolean kinged = chipAtEndState == 'B' || chipAtEndState == 'W';
 		// trace back to find the original chip location and all removed chips
 		int startingLocation = node.fromParentToCurrent.fromLocation[0];
+		boolean kinged = node.fromParentToCurrent.movedChipBecomesKing;
 		ArrayList<Integer> removed = new ArrayList<Integer>();
 		for (Integer[] removedLoc : node.fromParentToCurrent.removedChips) {
 			removed.add(removedLoc[0]);
@@ -162,6 +182,7 @@ public class ThirtyFiveElementArray implements CheckersGameState {
 		SearchNode temp = node.parent;
 		while (temp != null && temp.fromParentToCurrent != null) {
 			startingLocation = temp.fromParentToCurrent.fromLocation[0];
+			kinged = kinged || temp.fromParentToCurrent.movedChipBecomesKing;
 			for (Integer[] removedLoc : temp.fromParentToCurrent.removedChips) {
 				removed.add(removedLoc[0]);
 			}
@@ -269,8 +290,8 @@ public class ThirtyFiveElementArray implements CheckersGameState {
 		char chipBeingMoved = newState.locations[fromLocationIndex];
 		newState.locations[fromLocationIndex] = ' '; // old location is now empty
 		newState.locations[toLocationIndex] = chipBeingMoved; // new location gets the chip
-		// chars are ASCII-based, so subtracting 32 effectively capitalizes 'b' or 'w' if the chip is getting kinged
-		if (x.movedChipBecomesKing) newState.locations[toLocationIndex] -= 32;
+		// change chip to capital letter if it needs to be kinged
+		if (x.movedChipBecomesKing) newState.makeKing(toLocationIndex);
 		// turn locations where chips were removed into blank locations
 		for (Integer[] removedLocation : x.removedChips) {
 			newState.locations[removedLocation[0]] = ' ';
